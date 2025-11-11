@@ -40,7 +40,39 @@
           />
         </div>
         <div class="space-y-1">
-          <label class="text-sm font-medium text-slate-700" for="template-content">Contenido Gherkin</label>
+          <div class="flex items-center gap-2">
+            <label class="text-sm font-medium text-slate-700" for="template-content">Contenido Gherkin</label>
+            <div
+              class="group relative inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-slate-400 text-[11px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-lime-400"
+              tabindex="0"
+            >
+              ?
+              <div
+                class="pointer-events-none absolute left-6 top-1/2 z-20 w-64 -translate-y-1/2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600 opacity-0 shadow-lg transition duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+              >
+                <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  Atributos disponibles
+                </p>
+                <div class="max-h-56 space-y-3 overflow-y-auto">
+                  <p v-if="attributeStore.loading" class="text-slate-500">Cargando atributos...</p>
+                  <p v-else-if="attributeStore.attributes.length === 0" class="text-slate-500">
+                    No se han definido atributos todavía.
+                  </p>
+                  <ul v-else class="space-y-3">
+                    <li v-for="attribute in attributeStore.attributes" :key="attribute.id" class="space-y-1">
+                      <p class="font-semibold text-slate-700">{{ attribute.key }}</p>
+                      <p class="text-[11px] text-slate-500">
+                        Tipo: {{ attribute.type }} · {{ attribute.required ? 'Obligatorio' : 'Opcional' }}
+                      </p>
+                      <p v-if="attribute.allowedValues?.length" class="text-[11px] text-slate-500">
+                        Valores permitidos: {{ attribute.allowedValues.join(', ') }}
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
           <textarea
             id="template-content"
             v-model="form.content"
@@ -77,52 +109,49 @@
               @change="handleFileImport"
             />
           </header>
-          <div class="max-h-60 space-y-3 overflow-y-auto px-4 py-3">
-            <p v-if="gherkinSentenceStore.loading" class="text-xs text-slate-500">Cargando sentencias...</p>
-            <p v-else-if="gherkinSentenceStore.sentences.length === 0" class="text-xs text-slate-500">
-              No hay sentencias importadas todavía.
-            </p>
-            <div v-else class="space-y-4">
-              <section v-for="group in groupedSentences" :key="group.key" class="space-y-2">
-                <header class="border-l-4 border-slate-200 pl-3">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ group.label }}</p>
-                </header>
-                <ul class="space-y-2">
-                  <li v-for="sentence in group.sentences" :key="sentence.id">
-                    <button
-                      class="w-full rounded border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:border-lime-300 hover:bg-lime-50"
-                      type="button"
-                      @click="insertSentence(sentence.content)"
-                    >
-                      <code class="whitespace-pre-line break-words">{{ sentence.content }}</code>
-                    </button>
-                  </li>
-                </ul>
-              </section>
+          <div class="space-y-3 px-4 py-3">
+            <div>
+              <label class="text-[11px] font-semibold uppercase tracking-wide text-slate-500" for="sentence-search">
+                Buscar
+              </label>
+              <input
+                id="sentence-search"
+                v-model="sentenceQuery"
+                type="text"
+                placeholder="Buscar sentencia..."
+                class="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:border-lime-500 focus:outline-none"
+              />
             </div>
-          </div>
-        </div>
-
-        <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
-          <header class="border-b border-slate-200 px-4 py-3">
-            <h3 class="text-sm font-semibold text-slate-700">Atributos disponibles</h3>
-          </header>
-          <div class="max-h-56 space-y-3 overflow-y-auto px-4 py-3 text-xs">
-            <p v-if="attributeStore.loading" class="text-slate-500">Cargando atributos...</p>
-            <p v-else-if="attributeStore.attributes.length === 0" class="text-slate-500">
-              No se han definido atributos todavía.
-            </p>
-            <ul v-else class="space-y-3">
-              <li v-for="attribute in attributeStore.attributes" :key="attribute.id" class="space-y-1">
-                <p class="font-semibold text-slate-700">{{ attribute.key }}</p>
-                <p class="text-[11px] text-slate-500">
-                  Tipo: {{ attribute.type }} · {{ attribute.required ? 'Obligatorio' : 'Opcional' }}
-                </p>
-                <p v-if="attribute.allowedValues?.length" class="text-[11px] text-slate-500">
-                  Valores permitidos: {{ attribute.allowedValues.join(', ') }}
-                </p>
-              </li>
-            </ul>
+            <div class="max-h-60 space-y-3 overflow-y-auto">
+              <p v-if="gherkinSentenceStore.loading" class="text-xs text-slate-500">Cargando sentencias...</p>
+              <p v-else-if="gherkinSentenceStore.sentences.length === 0" class="text-xs text-slate-500">
+                No hay sentencias importadas todavía.
+              </p>
+              <p
+                v-else-if="groupedSentences.length === 0"
+                class="text-xs text-slate-500"
+              >
+                No hay sentencias que coincidan con "{{ sentenceQuery }}".
+              </p>
+              <div v-else class="space-y-4">
+                <section v-for="group in groupedSentences" :key="group.key" class="space-y-2">
+                  <header class="border-l-4 border-slate-200 pl-3">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ group.label }}</p>
+                  </header>
+                  <ul class="space-y-2">
+                    <li v-for="sentence in group.sentences" :key="sentence.id">
+                      <button
+                        class="w-full rounded border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:border-lime-300 hover:bg-lime-50"
+                        type="button"
+                        @click="insertSentence(sentence.content)"
+                      >
+                        <code class="whitespace-pre-line break-words">{{ sentence.content }}</code>
+                      </button>
+                    </li>
+                  </ul>
+                </section>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -162,6 +191,7 @@ const gherkinSentenceStore = useGherkinSentenceStore();
 const feedback = ref('');
 const importInput = ref<HTMLInputElement | null>(null);
 const contentTextarea = ref<HTMLTextAreaElement | null>(null);
+const sentenceQuery = ref('');
 
 interface GherkinSentenceGroup {
   key: string;
@@ -177,10 +207,22 @@ const emptyTemplate: TemplateDefinition = {
 
 const form = reactive<TemplateDefinition>({ ...emptyTemplate });
 
+const filteredSentences = computed(() => {
+  const query = sentenceQuery.value.trim().toLowerCase();
+  if (query.length === 0) {
+    return gherkinSentenceStore.sentences;
+  }
+
+  return gherkinSentenceStore.sentences.filter((sentence) => {
+    const haystack = `${sentence.content} ${sentence.folderPath ?? ''}`.toLowerCase();
+    return haystack.includes(query);
+  });
+});
+
 const groupedSentences = computed<GherkinSentenceGroup[]>(() => {
   const groups = new Map<string, GherkinSentenceGroup>();
 
-  for (const sentence of gherkinSentenceStore.sentences) {
+  for (const sentence of filteredSentences.value) {
     const rawKey = sentence.folderPath?.trim() ?? '';
     const key = rawKey.length > 0 ? rawKey : '__root__';
     const label = rawKey.length > 0 ? rawKey.replaceAll('/', ' / ') : 'Sin carpeta';
