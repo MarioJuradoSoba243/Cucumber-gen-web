@@ -1,5 +1,6 @@
 package com.cucumbergen.backend.controller;
 
+import com.cucumbergen.backend.dto.CloneTestCaseRequest;
 import com.cucumbergen.backend.dto.TestCaseDto;
 import com.cucumbergen.backend.service.TestCaseService;
 import jakarta.validation.Valid;
@@ -62,6 +63,19 @@ public class TestCaseController {
     public TestCaseDto update(@PathVariable String id, @Valid @RequestBody TestCaseDto request) {
         request.setId(id);
         return testCaseService.save(request);
+    }
+
+    /**
+     * Creates a copy of an existing test case.
+     *
+     * @param id identifier of the source test case
+     * @param request optional overrides for the cloned test
+     * @return the newly created clone
+     */
+    @PostMapping("/{id}/clone")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TestCaseDto clone(@PathVariable String id, @RequestBody(required = false) CloneTestCaseRequest request) {
+        return testCaseService.clone(id, request);
     }
 
     /**

@@ -39,11 +39,11 @@
           @delete-test="$emit('delete-test', $event)"
         />
       </div>
-      <ul v-if="node.tests.length" class="space-y-1">
+      <ul v-if="node.tests.length" class="space-y-0.5">
         <li
           v-for="test in node.tests"
           :key="test.id ?? `${node.path}-${test.name}`"
-          class="flex items-center justify-between"
+          class="flex items-center justify-between gap-1"
           :style="{ paddingLeft: `${(level + 1) * 16 + 12}px` }"
         >
           <button
@@ -57,13 +57,22 @@
           >
             <p class="font-medium">{{ test.name }}</p>
           </button>
-          <button
-            type="button"
-            class="ml-2 rounded px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
-            @click="$emit('delete-test', test)"
-          >
-            Borrar
-          </button>
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              class="rounded px-2 py-1 text-xs font-semibold text-sky-600 hover:bg-sky-50"
+              @click="$emit('clone-test', test)"
+            >
+              Clonar
+            </button>
+            <button
+              type="button"
+              class="rounded px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+              @click="$emit('delete-test', test)"
+            >
+              Borrar
+            </button>
+          </div>
         </li>
       </ul>
     </div>
@@ -95,6 +104,7 @@ const emit = defineEmits<{
   (e: 'select-folder', path: string): void;
   (e: 'select-test', test: TestCase): void;
   (e: 'delete-test', test: TestCase): void;
+  (e: 'clone-test', test: TestCase): void;
 }>();
 
 const { node, expanded, selectedFolder, selectedTestId, level } = toRefs(props);

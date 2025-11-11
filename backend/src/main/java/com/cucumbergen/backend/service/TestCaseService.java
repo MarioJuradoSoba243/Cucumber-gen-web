@@ -1,5 +1,6 @@
 package com.cucumbergen.backend.service;
 
+import com.cucumbergen.backend.dto.CloneTestCaseRequest;
 import com.cucumbergen.backend.dto.TestCaseDto;
 import com.cucumbergen.backend.entity.AttributeDefinition;
 import com.cucumbergen.backend.entity.TestAttributeValue;
@@ -67,6 +68,34 @@ public class TestCaseService {
 
         TestCase saved = testCaseRepository.save(entity);
         return toDto(saved);
+    }
+
+    /**
+     * Clones an existing test case applying optional overrides.
+     *
+     * @param id identifier of the source test case
+     * @param request overrides to apply to the clone (may be {@code null})
+     * @return persisted clone
+     */
+    public TestCaseDto clone(String id, CloneTestCaseRequest request) {
+        TestCase source = testCaseRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Test case not found: " + id));
+
+        TestCase clone = new TestCase();
+        clone.setName(resolveCloneName(source, request));
+        clone.setDescription(request != null && request.getDescription() != null
+                ? request.getDescription()
+                : source.getDescription());
+        String folderOverride = request != null ? request.getFolderPath() : null;
+        clone.setFolderPath(normalizeFolderPath(folderOverride != null ? folderOverride : source.getFolderPath()));
+        Map<String, Object> attributes = request != null && request.getAttributes() != null
+                ? new HashMap<>(request.getAttributes())
+                : new HashMap<>(source.getAttributes());
+        clone.setAttributes(attributes);
+        syncAttributeValues(clone, attributes);
+
+        TestCase savedClone = testCaseRepository.save(clone);
+        return toDto(savedClone);
     }
 
     /**
@@ -140,6 +169,17 @@ public class TestCaseService {
         dto.setFolderPath(entity.getFolderPath());
         dto.setAttributes(entity.getAttributes());
         return dto;
+    }
+
+    private String resolveCloneName(TestCase source, CloneTestCaseRequest request) {
+        if (request != null && request.getName() != null && !request.getName().isBlank()) {
+            return request.getName();
+        }
+        String baseName = source.getName() == null ? "Test sin nombre" : source.getName().trim();
+        if (baseName.isEmpty()) {
+            baseName = "Test sin nombre";
+        }
+        return baseName + " (copia)";
     }
 
     private String normalizeFolderPath(String folderPath) {

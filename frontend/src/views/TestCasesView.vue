@@ -1,5 +1,5 @@
 <template>
-  <section class="space-y-6">
+  <section class="space-y-5">
     <header class="flex items-center justify-between">
       <div>
         <h2 class="text-xl font-semibold">Casos de prueba</h2>
@@ -8,7 +8,7 @@
         </p>
       </div>
       <button
-        class="rounded bg-lime-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-lime-600"
+        class="rounded bg-lime-500 px-4 py-1.5 text-sm font-semibold text-white shadow hover:bg-lime-600"
         @click="prepareNewTest"
       >
         Nuevo test
@@ -19,23 +19,23 @@
       {{ feedback }}
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
-      <aside class="space-y-3">
+    <div class="grid gap-4 lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr]">
+      <aside class="space-y-2.5">
         <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
-          <header class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+          <header class="flex items-center justify-between border-b border-slate-200 px-4 py-2.5">
             <div>
               <h3 class="text-sm font-semibold text-slate-700">Carpetas y tests</h3>
               <p class="text-xs text-slate-500">Selecciona una carpeta para editar o crear tests.</p>
             </div>
             <button
               type="button"
-              class="rounded border border-lime-500 px-3 py-1 text-xs font-semibold text-lime-600 hover:bg-lime-50"
+              class="rounded border border-lime-500 px-3 py-1.5 text-xs font-semibold text-lime-600 hover:bg-lime-50"
               @click="createFolder"
             >
               Nueva carpeta
             </button>
           </header>
-          <div class="px-2 py-3">
+          <div class="px-3 py-3">
             <TestFolderTree
               :node="folderTree"
               :expanded="expandedFolders"
@@ -45,6 +45,7 @@
               @select-folder="selectFolder"
               @select-test="editTest"
               @delete-test="removeTest"
+              @clone-test="cloneTest"
             />
             <p v-if="!folderTree.children.length && !folderTree.tests.length" class="px-2 text-sm text-slate-500">
               Aún no hay tests. Crea uno nuevo para comenzar.
@@ -53,11 +54,11 @@
         </div>
       </aside>
 
-      <form class="space-y-5 rounded-lg border border-slate-200 bg-white p-6 shadow-sm" @submit.prevent="handleSubmit">
+      <form class="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:p-6" @submit.prevent="handleSubmit">
         <h3 class="text-lg font-semibold">
           {{ currentTest.id ? 'Editar test' : 'Crear test' }}
         </h3>
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="grid gap-3 md:grid-cols-2">
           <div class="space-y-1">
             <label class="text-sm font-medium text-slate-700" for="test-name">Nombre</label>
             <input
@@ -65,7 +66,7 @@
               v-model="currentTest.name"
               type="text"
               required
-              class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none"
+              class="w-full rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-lime-500 focus:outline-none"
             />
           </div>
           <div class="space-y-1">
@@ -75,7 +76,7 @@
               v-model="currentTest.folderPath"
               type="text"
               placeholder="(raíz)"
-              class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none"
+              class="w-full rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-lime-500 focus:outline-none"
             />
             <p class="text-xs text-slate-500">
               Usa "/" para separar carpetas. Selecciona una carpeta en el árbol para rellenarla automáticamente.
@@ -87,12 +88,12 @@
           <textarea
             id="test-description"
             v-model="currentTest.description"
-            class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none"
-            rows="3"
+            class="w-full rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-lime-500 focus:outline-none"
+            rows="2"
           ></textarea>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-3">
           <h4 class="text-sm font-semibold text-slate-700">Atributos personalizados</h4>
           <div v-if="attributeStore.attributes.length === 0" class="text-sm text-slate-500">
             No hay atributos definidos. Agrega atributos desde la pestaña "Atributos".
@@ -101,11 +102,11 @@
             <div v-if="activeAttributeDefinitions.length === 0" class="rounded border border-dashed border-slate-300 p-3 text-sm text-slate-500">
               No hay atributos obligatorios. Añade los opcionales desde el selector inferior.
             </div>
-            <div class="grid gap-3 md:grid-cols-2">
+            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <div
                 v-for="definition in activeAttributeDefinitions"
                 :key="definition.id ?? definition.key"
-                class="flex flex-col gap-2 rounded border border-slate-200 p-3 md:p-4"
+                class="flex flex-col gap-2 rounded border border-slate-200 p-3"
               >
                 <div class="flex items-center justify-between gap-2">
                   <label :for="`attribute-${definition.key}`" class="text-sm font-medium text-slate-700">
@@ -126,7 +127,7 @@
                   :id="`attribute-${definition.key}`"
                   v-model="formAttributes[definition.key]"
                   :required="definition.required"
-                  class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none md:max-w-xs"
+                  class="w-full rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-lime-500 focus:outline-none md:max-w-xs"
                 >
                   <option value="" disabled>Selecciona un valor</option>
                   <option v-for="option in definition.allowedValues" :key="option" :value="option">
@@ -149,19 +150,19 @@
                   v-model="formAttributes[definition.key]"
                   :required="definition.required"
                   type="text"
-                  class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none md:max-w-xs"
+                  class="w-full rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-lime-500 focus:outline-none md:max-w-xs"
                 />
               </div>
             </div>
-            <div v-if="optionalAttributeOptions.length > 0" class="rounded border border-dashed border-slate-300 p-3">
+            <div v-if="optionalAttributeOptions.length > 0" class="rounded border border-dashed border-slate-300 p-2.5">
               <label class="text-sm font-medium text-slate-700" for="optional-attribute-select">
                 Añadir atributo opcional
               </label>
-              <div class="mt-2 flex flex-wrap items-end gap-2">
+              <div class="mt-1.5 flex flex-wrap items-end gap-2">
                 <select
                   id="optional-attribute-select"
                   v-model="nextOptionalAttribute"
-                  class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none md:max-w-xs"
+                  class="w-full rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-lime-500 focus:outline-none md:max-w-xs"
                 >
                   <option value="">Selecciona un atributo</option>
                   <option
@@ -174,7 +175,7 @@
                 </select>
                 <button
                   type="button"
-                  class="rounded bg-lime-500 px-3 py-2 text-sm font-semibold text-white hover:bg-lime-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  class="rounded bg-lime-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-lime-600 disabled:cursor-not-allowed disabled:bg-slate-300"
                   :disabled="!nextOptionalAttribute"
                   @click="addOptionalAttribute"
                 >
@@ -188,13 +189,13 @@
         <div class="flex gap-3">
           <button
             type="submit"
-            class="rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            class="rounded bg-slate-900 px-4 py-1.5 text-sm font-semibold text-white hover:bg-slate-800"
           >
             {{ currentTest.id ? 'Guardar cambios' : 'Crear test' }}
           </button>
           <button
             type="button"
-            class="rounded border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+            class="rounded border border-slate-300 px-4 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
             @click="prepareNewTest"
           >
             Cancelar
@@ -519,6 +520,40 @@ async function removeTest(test: TestCase) {
       console.error(error);
       feedback.value = 'No se pudo eliminar el test.';
     }
+  }
+}
+
+function generateCloneName(baseName: string, folderPath: string): string {
+  const normalizedName = baseName.trim() || 'Test sin nombre';
+  const existingNames = new Set(
+    testStore.tests
+      .filter((candidate) => (candidate.folderPath ?? '') === folderPath)
+      .map((candidate) => candidate.name.trim())
+  );
+  const initial = `${normalizedName} (copia)`;
+  if (!existingNames.has(initial)) {
+    return initial;
+  }
+  let index = 2;
+  while (existingNames.has(`${normalizedName} (copia ${index})`)) {
+    index += 1;
+  }
+  return `${normalizedName} (copia ${index})`;
+}
+
+async function cloneTest(test: TestCase) {
+  if (!test.id) {
+    return;
+  }
+  const normalizedFolder = safeNormalize(test.folderPath ?? '') ?? '';
+  const cloneName = generateCloneName(test.name ?? '', normalizedFolder);
+  try {
+    const cloned = await testStore.cloneTest(test.id, { name: cloneName, folderPath: normalizedFolder });
+    feedback.value = `Test clonado como "${cloned.name}".`;
+    editTest(cloned);
+  } catch (error) {
+    console.error(error);
+    feedback.value = 'No se pudo clonar el test.';
   }
 }
 

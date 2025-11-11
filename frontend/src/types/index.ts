@@ -6,6 +6,13 @@ export interface TestCase {
   attributes: Record<string, string | number | boolean | null>;
 }
 
+export interface CloneTestPayload {
+  name?: string;
+  description?: string;
+  folderPath?: string;
+  attributes?: Record<string, string | number | boolean | null>;
+}
+
 export interface AttributeDefinition {
   id?: string;
   key: string;
