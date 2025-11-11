@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:sqlite:file:memdb?mode=memory&cache=shared
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+  flyway:
+    enabled: false
