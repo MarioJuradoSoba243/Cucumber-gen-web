@@ -2,6 +2,7 @@ export interface TestCase {
   id?: string;
   name: string;
   description?: string;
+  folderPath: string;
   attributes: Record<string, string | number | boolean | null>;
 }
 

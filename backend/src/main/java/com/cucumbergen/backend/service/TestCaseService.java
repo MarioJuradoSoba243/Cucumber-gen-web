@@ -9,6 +9,7 @@ import com.cucumbergen.backend.exception.NotFoundException;
 import com.cucumbergen.backend.repository.AttributeDefinitionRepository;
 import com.cucumbergen.backend.repository.TestCaseRepository;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,7 @@ public class TestCaseService {
 
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
+        entity.setFolderPath(normalizeFolderPath(request.getFolderPath()));
         Map<String, Object> attributes = request.getAttributes() == null
                 ? new HashMap<>()
                 : new HashMap<>(request.getAttributes());
@@ -135,7 +137,32 @@ public class TestCaseService {
         dto.setId(entity.getId());
         dto.setName(entity.getName());
         dto.setDescription(entity.getDescription());
+        dto.setFolderPath(entity.getFolderPath());
         dto.setAttributes(entity.getAttributes());
         return dto;
+    }
+
+    private String normalizeFolderPath(String folderPath) {
+        if (folderPath == null) {
+            return "";
+        }
+        String sanitized = folderPath.trim().replace('\\', '/');
+        if (sanitized.isEmpty()) {
+            return "";
+        }
+
+        String[] segments = sanitized.split("/");
+        List<String> normalized = new ArrayList<>();
+        for (String rawSegment : segments) {
+            String segment = rawSegment.trim();
+            if (segment.isEmpty() || ".".equals(segment)) {
+                continue;
+            }
+            if ("..".equals(segment)) {
+                throw new BadRequestException("The folder path cannot contain parent directory references");
+            }
+            normalized.add(segment);
+        }
+        return String.join("/", normalized);
     }
 }

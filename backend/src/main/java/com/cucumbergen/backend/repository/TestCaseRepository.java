@@ -27,7 +27,7 @@ public class TestCaseRepository {
      * @return list of test cases
      */
     public List<TestCase> findAll() {
-        return entityManager.createQuery("SELECT t FROM TestCase t ORDER BY t.createdAt", TestCase.class)
+        return entityManager.createQuery("SELECT t FROM TestCase t ORDER BY t.folderPath, t.name", TestCase.class)
                 .getResultList();
     }
 
