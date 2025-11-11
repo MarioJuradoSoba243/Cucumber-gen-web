@@ -1,6 +1,7 @@
 package com.cucumbergen.backend.config;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
@@ -33,5 +34,9 @@ class JpaConfigTest {
         assertArrayEquals(new String[] {"com.cucumbergen.backend"},
                 packagesToScan,
                 "JpaConfig should scan the full backend package to pick converters");
+
+        assertEquals("com.cucumbergen.backend.persistence.SQLitePlatform",
+                factoryBean.getJpaPropertyMap().get("eclipselink.target-database"),
+                "Default target database should point to the custom SQLite platform");
     }
 }

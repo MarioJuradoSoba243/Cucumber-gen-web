@@ -6,7 +6,7 @@ spring:
     show-sql: false
     properties:
       eclipselink:
-        target-database: org.eclipse.persistence.platform.database.SQLitePlatform
+        target-database: com.cucumbergen.backend.persistence.SQLitePlatform
         weaving: false
         logging.level: INFO
       jakarta:

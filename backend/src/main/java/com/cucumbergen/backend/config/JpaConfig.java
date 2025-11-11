@@ -21,6 +21,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class JpaConfig {
 
+    private static final String DEFAULT_SQLITE_PLATFORM =
+            "com.cucumbergen.backend.persistence.SQLitePlatform";
+
     private final Environment environment;
 
     public JpaConfig(Environment environment) {
@@ -38,14 +41,14 @@ public class JpaConfig {
         vendorAdapter.setShowSql(environment.getProperty("spring.jpa.show-sql", Boolean.class, Boolean.FALSE));
         String databasePlatform = environment.getProperty("spring.jpa.properties.eclipselink.target-database");
         if (databasePlatform == null || databasePlatform.isBlank()) {
-            vendorAdapter.setDatabasePlatform("org.eclipse.persistence.platform.database.SQLitePlatform");
-        } else {
-            vendorAdapter.setDatabasePlatform(databasePlatform);
+            databasePlatform = DEFAULT_SQLITE_PLATFORM;
         }
+        vendorAdapter.setDatabasePlatform(databasePlatform);
         factoryBean.setJpaVendorAdapter(vendorAdapter);
         factoryBean.setJpaDialect(new EclipseLinkJpaDialect());
 
         Map<String, Object> jpaProperties = new HashMap<>();
+        jpaProperties.put("eclipselink.target-database", databasePlatform);
         jpaProperties.put("eclipselink.weaving",
                 environment.getProperty("spring.jpa.properties.eclipselink.weaving", "false"));
         jpaProperties.put("eclipselink.logging.level",
