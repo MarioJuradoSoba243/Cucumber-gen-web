@@ -37,6 +37,7 @@
           @select-folder="$emit('select-folder', $event)"
           @select-test="$emit('select-test', $event)"
           @delete-test="$emit('delete-test', $event)"
+          @clone-test="$emit('clone-test', $event)"
         />
       </div>
       <ul v-if="node.tests.length" class="space-y-0.5">
