@@ -16,7 +16,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class WebConfig {
 
-    private static final String DEFAULT_ALLOWED_ORIGINS = "http://localhost:5173";
+    private static final String PROPERTY_ALLOWED_ORIGINS = "app.cors.allowed-origins";
+    private static final String PROPERTY_ALLOWED_ORIGIN_PATTERNS = "app.cors.allowed-origin-patterns";
+    private static final String DEFAULT_ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173";
 
     private final Environment environment;
 
@@ -32,7 +34,12 @@ public class WebConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(resolveAllowedOrigins());
+        List<String> allowedOriginPatterns = resolveAllowedOriginPatterns();
+        if (!allowedOriginPatterns.isEmpty()) {
+            configuration.setAllowedOriginPatterns(allowedOriginPatterns);
+        } else {
+            configuration.setAllowedOrigins(resolveAllowedOrigins());
+        }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -43,10 +50,21 @@ public class WebConfig {
     }
 
     private List<String> resolveAllowedOrigins() {
-        String configuredOrigins = environment.getProperty("app.cors.allowed-origins", DEFAULT_ALLOWED_ORIGINS);
-        return Arrays.stream(configuredOrigins.split(","))
+        return parseList(environment.getProperty(PROPERTY_ALLOWED_ORIGINS, DEFAULT_ALLOWED_ORIGINS));
+    }
+
+    private List<String> resolveAllowedOriginPatterns() {
+        String configuredPatterns = environment.getProperty(PROPERTY_ALLOWED_ORIGIN_PATTERNS);
+        if (configuredPatterns == null) {
+            return List.of();
+        }
+        return parseList(configuredPatterns);
+    }
+
+    private List<String> parseList(String rawValue) {
+        return Arrays.stream(rawValue.split(","))
                 .map(String::trim)
-                .filter(origin -> !origin.isEmpty())
+                .filter(value -> !value.isEmpty())
                 .collect(Collectors.toList());
     }
 }

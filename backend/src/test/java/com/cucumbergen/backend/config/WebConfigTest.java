@@ -16,6 +16,22 @@ import org.springframework.web.cors.CorsConfigurationSource;
 class WebConfigTest {
 
     @Test
+    void corsConfigurationSource_usesDefaultOriginsWhenNotConfigured() {
+        MockEnvironment environment = new MockEnvironment();
+
+        WebConfig config = new WebConfig(environment);
+        CorsConfigurationSource source = config.corsConfigurationSource();
+
+        MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/v1/tests");
+        CorsConfiguration configuration = source.getCorsConfiguration(request);
+
+        assertEquals(List.of("http://localhost:5173", "http://127.0.0.1:5173"), configuration.getAllowedOrigins());
+        assertTrue(configuration.getAllowedMethods().containsAll(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")));
+        assertEquals(List.of("*"), configuration.getAllowedHeaders());
+        assertTrue(Boolean.TRUE.equals(configuration.getAllowCredentials()));
+    }
+
+    @Test
     void corsConfigurationSource_usesConfiguredOrigins() {
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty("app.cors.allowed-origins", "http://localhost:5173, https://example.com");
@@ -30,5 +46,20 @@ class WebConfigTest {
         assertTrue(configuration.getAllowedMethods().containsAll(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")));
         assertEquals(List.of("*"), configuration.getAllowedHeaders());
         assertTrue(Boolean.TRUE.equals(configuration.getAllowCredentials()));
+    }
+
+    @Test
+    void corsConfigurationSource_supportsOriginPatterns() {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty("app.cors.allowed-origin-patterns", "http://*.example.com, https://*.example.org");
+
+        WebConfig config = new WebConfig(environment);
+        CorsConfigurationSource source = config.corsConfigurationSource();
+
+        MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/v1/tests");
+        CorsConfiguration configuration = source.getCorsConfiguration(request);
+
+        assertEquals(List.of("http://*.example.com", "https://*.example.org"), configuration.getAllowedOriginPatterns());
+        assertTrue(configuration.getAllowedOrigins() == null || configuration.getAllowedOrigins().isEmpty());
     }
 }

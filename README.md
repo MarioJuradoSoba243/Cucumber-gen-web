@@ -39,6 +39,11 @@ project-root/
 
 La API REST se expone en `http://localhost:8080/api/v1` y utiliza SQLite por defecto.
 
+### Configuración CORS
+
+- `app.cors.allowed-origins`: Lista separada por comas de orígenes explícitos permitidos (por defecto `http://localhost:5173,http://127.0.0.1:5173`).
+- `app.cors.allowed-origin-patterns`: Lista opcional de patrones (wildcards) aceptados. Si se configura, sustituye a `allowed-origins` y es útil cuando la UI se sirve desde direcciones dinámicas (por ejemplo `http://*.mi-dominio.local:5173`).
+
 ### Comandos útiles
 
 ```bash
