@@ -21,6 +21,11 @@ export interface TemplateDefinition {
   description?: string;
 }
 
+export interface GherkinSentence {
+  id: string;
+  content: string;
+}
+
 export interface GeneratedFeature {
   testId: string;
   filename: string;
