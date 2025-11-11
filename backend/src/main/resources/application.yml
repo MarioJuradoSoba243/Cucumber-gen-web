@@ -3,11 +3,16 @@ spring:
     url: jdbc:sqlite:./data/app.db
     driver-class-name: org.sqlite.JDBC
   jpa:
-    hibernate:
-      ddl-auto: validate
+    show-sql: false
     properties:
-      hibernate:
-        dialect: org.hibernate.community.dialect.SQLiteDialect
+      eclipselink:
+        target-database: org.eclipse.persistence.platform.database.SQLitePlatform
+        weaving: false
+        logging.level: INFO
+      jakarta:
+        persistence:
+          schema-generation:
+            database.action: none
   flyway:
     locations: classpath:db/migration
     enabled: true

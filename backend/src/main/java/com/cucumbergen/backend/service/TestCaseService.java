@@ -8,7 +8,7 @@ import com.cucumbergen.backend.exception.BadRequestException;
 import com.cucumbergen.backend.exception.NotFoundException;
 import com.cucumbergen.backend.repository.AttributeDefinitionRepository;
 import com.cucumbergen.backend.repository.TestCaseRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

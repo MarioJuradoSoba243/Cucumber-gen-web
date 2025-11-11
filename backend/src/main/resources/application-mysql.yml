@@ -4,11 +4,15 @@ spring:
     username: testgen
     password: testgen
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+      eclipselink:
+        target-database: org.eclipse.persistence.platform.database.MySQLPlatform
+        weaving: false
+        logging.level: INFO
+      jakarta:
+        persistence:
+          schema-generation:
+            database.action: none
   flyway:
     locations: classpath:db/migration
 server:
