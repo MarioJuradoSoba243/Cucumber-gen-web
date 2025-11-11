@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -24,6 +25,12 @@ public class JpaConfig {
     private static final String DEFAULT_SQLITE_PLATFORM =
             "com.cucumbergen.backend.persistence.SQLitePlatform";
 
+    private static final Set<String> SQLITE_ALIASES = Set.of(
+            "org.eclipse.persistence.platform.database.SQLitePlatform",
+            "org.eclipse.persistence.platform.database.SqlitePlatform",
+            "sqlite",
+            "SQLite");
+
     private final Environment environment;
 
     public JpaConfig(Environment environment) {
@@ -39,10 +46,7 @@ public class JpaConfig {
 
         EclipseLinkJpaVendorAdapter vendorAdapter = new EclipseLinkJpaVendorAdapter();
         vendorAdapter.setShowSql(environment.getProperty("spring.jpa.show-sql", Boolean.class, Boolean.FALSE));
-        String databasePlatform = environment.getProperty("spring.jpa.properties.eclipselink.target-database");
-        if (databasePlatform == null || databasePlatform.isBlank()) {
-            databasePlatform = DEFAULT_SQLITE_PLATFORM;
-        }
+        String databasePlatform = resolveDatabasePlatform();
         vendorAdapter.setDatabasePlatform(databasePlatform);
         factoryBean.setJpaVendorAdapter(vendorAdapter);
         factoryBean.setJpaDialect(new EclipseLinkJpaDialect());
@@ -63,5 +67,20 @@ public class JpaConfig {
     @Bean
     public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
+    }
+
+    private String resolveDatabasePlatform() {
+        String configured = environment.getProperty("spring.jpa.properties.eclipselink.target-database");
+        if (configured == null || configured.isBlank()) {
+            configured = environment.getProperty("spring.jpa.database-platform");
+        }
+        if (configured == null || configured.isBlank()) {
+            configured = DEFAULT_SQLITE_PLATFORM;
+        }
+        String normalized = configured.trim();
+        if (SQLITE_ALIASES.contains(normalized)) {
+            return DEFAULT_SQLITE_PLATFORM;
+        }
+        return normalized;
     }
 }

@@ -3,6 +3,7 @@ spring:
     url: jdbc:sqlite:./data/app.db
     driver-class-name: org.sqlite.JDBC
   jpa:
+    database-platform: com.cucumbergen.backend.persistence.SQLitePlatform
     show-sql: false
     properties:
       eclipselink:
@@ -18,3 +19,7 @@ spring:
     enabled: true
 server:
   port: 8080
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173

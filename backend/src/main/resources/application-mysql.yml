@@ -4,6 +4,7 @@ spring:
     username: testgen
     password: testgen
   jpa:
+    database-platform: org.eclipse.persistence.platform.database.MySQLPlatform
     properties:
       eclipselink:
         target-database: org.eclipse.persistence.platform.database.MySQLPlatform
@@ -17,3 +18,7 @@ spring:
     locations: classpath:db/migration
 server:
   port: 8080
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173

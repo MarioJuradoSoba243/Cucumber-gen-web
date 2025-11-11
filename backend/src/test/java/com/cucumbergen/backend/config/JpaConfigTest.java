@@ -39,4 +39,21 @@ class JpaConfigTest {
                 factoryBean.getJpaPropertyMap().get("eclipselink.target-database"),
                 "Default target database should point to the custom SQLite platform");
     }
+
+    @Test
+    void entityManagerFactory_normalizesLegacySqlitePlatformNames() {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(
+                "spring.jpa.properties.eclipselink.target-database",
+                "org.eclipse.persistence.platform.database.SQLitePlatform");
+        JpaConfig jpaConfig = new JpaConfig(environment);
+        DataSource dataSource = Mockito.mock(DataSource.class);
+
+        LocalContainerEntityManagerFactoryBean factoryBean =
+                jpaConfig.entityManagerFactory(dataSource);
+
+        assertEquals("com.cucumbergen.backend.persistence.SQLitePlatform",
+                factoryBean.getJpaPropertyMap().get("eclipselink.target-database"),
+                "Legacy EclipseLink SQLite platform alias should map to the bundled implementation");
+    }
 }
