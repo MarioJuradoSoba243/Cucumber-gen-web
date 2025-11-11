@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import client from '../api/client';
-import type { TestCase } from '../types';
+import type { CloneTestPayload, TestCase } from '../types';
 
 interface TestState {
   tests: TestCase[];
@@ -35,6 +35,11 @@ export const useTestStore = defineStore('tests', {
     async deleteTest(id: string) {
       await client.delete(`/tests/${id}`);
       this.tests = this.tests.filter((test) => test.id !== id);
+    },
+    async cloneTest(id: string, overrides: CloneTestPayload = {}) {
+      const { data } = await client.post<TestCase>(`/tests/${id}/clone`, overrides);
+      this.tests.push(data);
+      return data;
     }
   }
 });
