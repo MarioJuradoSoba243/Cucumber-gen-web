@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.util.UUID;
 
@@ -31,8 +32,8 @@ public class Template extends AbstractAuditableEntity {
     /**
      * Ensures an identifier is generated for new templates.
      */
-    @jakarta.persistence.PrePersist
-    protected void onCreate() {
+    @PrePersist
+    protected void assignIdentifier() {
         if (id == null) {
             id = UUID.randomUUID().toString();
         }

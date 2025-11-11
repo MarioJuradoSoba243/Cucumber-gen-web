@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.util.HashMap;
@@ -46,8 +47,8 @@ public class TestCase extends AbstractAuditableEntity {
     /**
      * Ensures the identifier is always populated before persisting.
      */
-    @jakarta.persistence.PrePersist
-    protected void onCreate() {
+    @PrePersist
+    protected void ensureIdentifier() {
         if (id == null) {
             id = UUID.randomUUID().toString();
         }
