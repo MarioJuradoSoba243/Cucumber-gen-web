@@ -15,6 +15,8 @@ public class TestCaseDto {
 
     private String description;
 
+    private String folderPath = "";
+
     private Map<String, Object> attributes;
 
     public String getId() {
@@ -39,6 +41,14 @@ public class TestCaseDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getFolderPath() {
+        return folderPath;
+    }
+
+    public void setFolderPath(String folderPath) {
+        this.folderPath = folderPath;
     }
 
     public Map<String, Object> getAttributes() {

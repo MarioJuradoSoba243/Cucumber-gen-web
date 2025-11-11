@@ -34,6 +34,9 @@ public class TestCase extends AbstractAuditableEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "folder_path", nullable = false)
+    private String folderPath = "";
+
     @Convert(converter = JsonMapConverter.class)
     @Column(name = "attributes", columnDefinition = "TEXT")
     private Map<String, Object> attributes = new HashMap<>();
@@ -76,6 +79,14 @@ public class TestCase extends AbstractAuditableEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getFolderPath() {
+        return folderPath;
+    }
+
+    public void setFolderPath(String folderPath) {
+        this.folderPath = folderPath;
     }
 
     public Map<String, Object> getAttributes() {

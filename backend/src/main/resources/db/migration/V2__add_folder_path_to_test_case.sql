@@ -1,0 +1,1 @@
+ALTER TABLE test_case ADD COLUMN folder_path TEXT NOT NULL DEFAULT '';
