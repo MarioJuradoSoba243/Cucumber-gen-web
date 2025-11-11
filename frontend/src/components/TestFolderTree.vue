@@ -1,9 +1,9 @@
 <template>
-  <div class="space-y-1">
-    <div class="flex items-center gap-1 text-sm" :style="{ paddingLeft: `${level * 16}px` }">
+  <div class="space-y-0.5 text-xs">
+    <div class="flex items-center gap-0.5" :style="{ paddingLeft: `${level * 14}px` }">
       <button
         type="button"
-        class="flex h-6 w-6 items-center justify-center rounded hover:bg-slate-100"
+        class="flex h-5 w-5 items-center justify-center rounded hover:bg-slate-100"
         :class="{
           'text-slate-500': canToggle,
           'cursor-default text-transparent': !canToggle
@@ -14,15 +14,15 @@
       </button>
       <button
         type="button"
-        class="flex-1 rounded px-2 py-1 text-left hover:bg-slate-100"
+        class="flex-1 rounded px-1.5 py-0.5 text-left hover:bg-slate-100"
         :class="{
           'bg-lime-100 text-lime-700': node.path === selectedFolder,
           'text-slate-700': node.path !== selectedFolder
         }"
         @click="handleSelectFolder"
       >
-        <span class="font-medium">{{ node.name }}</span>
-        <span v-if="node.path && node.path !== ''" class="ml-2 text-xs text-slate-400">/{{ node.path }}</span>
+        <span class="text-sm font-semibold leading-tight">{{ node.name }}</span>
+        <span v-if="node.path && node.path !== ''" class="ml-1 text-[10px] text-slate-400">/{{ node.path }}</span>
       </button>
     </div>
     <div v-if="isExpanded" class="space-y-1">
@@ -43,31 +43,31 @@
         <li
           v-for="test in node.tests"
           :key="test.id ?? `${node.path}-${test.name}`"
-          class="flex items-center justify-between gap-1"
-          :style="{ paddingLeft: `${(level + 1) * 16 + 12}px` }"
+          class="flex items-center justify-between gap-0.5"
+          :style="{ paddingLeft: `${(level + 1) * 14 + 10}px` }"
         >
           <button
             type="button"
-            class="flex-1 rounded px-2 py-1 text-left hover:bg-slate-100"
+            class="flex-1 rounded px-1.5 py-0.5 text-left hover:bg-slate-100"
             :class="{
               'bg-slate-900 text-white': isSelected(test),
               'text-slate-700': !isSelected(test)
             }"
             @click="$emit('select-test', test)"
           >
-            <p class="font-medium">{{ test.name }}</p>
+            <p class="text-[11px] font-medium leading-tight">{{ test.name }}</p>
           </button>
           <div class="flex items-center gap-1">
             <button
               type="button"
-              class="rounded px-2 py-1 text-xs font-semibold text-sky-600 hover:bg-sky-50"
+              class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-600 hover:bg-sky-50"
               @click="$emit('clone-test', test)"
             >
               Clonar
             </button>
             <button
               type="button"
-              class="rounded px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+              class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-600 hover:bg-red-50"
               @click="$emit('delete-test', test)"
             >
               Borrar
