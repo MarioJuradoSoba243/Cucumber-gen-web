@@ -31,7 +31,7 @@ public class JpaConfig {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
         LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
         factoryBean.setDataSource(dataSource);
-        factoryBean.setPackagesToScan("com.cucumbergen.backend.entity");
+        factoryBean.setPackagesToScan("com.cucumbergen.backend");
         factoryBean.setPersistenceUnitName("cucumbergen");
 
         EclipseLinkJpaVendorAdapter vendorAdapter = new EclipseLinkJpaVendorAdapter();
