@@ -77,22 +77,29 @@
               @change="handleFileImport"
             />
           </header>
-          <div class="max-h-60 space-y-2 overflow-y-auto px-4 py-3">
+          <div class="max-h-60 space-y-3 overflow-y-auto px-4 py-3">
             <p v-if="gherkinSentenceStore.loading" class="text-xs text-slate-500">Cargando sentencias...</p>
             <p v-else-if="gherkinSentenceStore.sentences.length === 0" class="text-xs text-slate-500">
               No hay sentencias importadas todavía.
             </p>
-            <ul v-else class="space-y-2">
-              <li v-for="sentence in gherkinSentenceStore.sentences" :key="sentence.id">
-                <button
-                  class="w-full rounded border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:border-lime-300 hover:bg-lime-50"
-                  type="button"
-                  @click="insertSentence(sentence.content)"
-                >
-                  <code class="whitespace-pre-line break-words">{{ sentence.content }}</code>
-                </button>
-              </li>
-            </ul>
+            <div v-else class="space-y-4">
+              <section v-for="group in groupedSentences" :key="group.key" class="space-y-2">
+                <header class="border-l-4 border-slate-200 pl-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ group.label }}</p>
+                </header>
+                <ul class="space-y-2">
+                  <li v-for="sentence in group.sentences" :key="sentence.id">
+                    <button
+                      class="w-full rounded border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:border-lime-300 hover:bg-lime-50"
+                      type="button"
+                      @click="insertSentence(sentence.content)"
+                    >
+                      <code class="whitespace-pre-line break-words">{{ sentence.content }}</code>
+                    </button>
+                  </li>
+                </ul>
+              </section>
+            </div>
           </div>
         </div>
 
@@ -143,11 +150,11 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import { useAttributeStore } from '../stores/attributeStore';
 import { useGherkinSentenceStore } from '../stores/gherkinSentenceStore';
 import { useTemplateStore } from '../stores/templateStore';
-import type { TemplateDefinition } from '../types';
+import type { GherkinSentence, TemplateDefinition } from '../types';
 
 const templateStore = useTemplateStore();
 const attributeStore = useAttributeStore();
@@ -156,6 +163,12 @@ const feedback = ref('');
 const importInput = ref<HTMLInputElement | null>(null);
 const contentTextarea = ref<HTMLTextAreaElement | null>(null);
 
+interface GherkinSentenceGroup {
+  key: string;
+  label: string;
+  sentences: GherkinSentence[];
+}
+
 const emptyTemplate: TemplateDefinition = {
   name: '',
   description: '',
@@ -163,6 +176,24 @@ const emptyTemplate: TemplateDefinition = {
 };
 
 const form = reactive<TemplateDefinition>({ ...emptyTemplate });
+
+const groupedSentences = computed<GherkinSentenceGroup[]>(() => {
+  const groups = new Map<string, GherkinSentenceGroup>();
+
+  for (const sentence of gherkinSentenceStore.sentences) {
+    const rawKey = sentence.folderPath?.trim() ?? '';
+    const key = rawKey.length > 0 ? rawKey : '__root__';
+    const label = rawKey.length > 0 ? rawKey.replaceAll('/', ' / ') : 'Sin carpeta';
+
+    if (!groups.has(key)) {
+      groups.set(key, { key, label, sentences: [] });
+    }
+
+    groups.get(key)!.sentences.push(sentence);
+  }
+
+  return Array.from(groups.values());
+});
 
 onMounted(async () => {
   try {

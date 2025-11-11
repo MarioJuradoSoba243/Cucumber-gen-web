@@ -3,9 +3,9 @@ package com.cucumbergen.backend.service;
 import com.cucumbergen.backend.dto.GherkinSentenceDto;
 import com.cucumbergen.backend.entity.GherkinSentence;
 import com.cucumbergen.backend.repository.GherkinSentenceRepository;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,25 +45,35 @@ public class GherkinSentenceService {
         List<String> source = sentences == null ? List.of() : sentences;
         gherkinSentenceRepository.deleteAll();
 
-        Set<String> normalized = new LinkedHashSet<>();
+        Map<String, SentenceDefinition> normalized = new LinkedHashMap<>();
+        String currentFolder = null;
         for (String sentence : source) {
             if (sentence == null) {
                 continue;
             }
             String trimmed = sentence.trim();
-            if (!trimmed.isEmpty() && !trimmed.startsWith("#")) {
-                normalized.add(trimmed);
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                continue;
             }
+            if (trimmed.startsWith("-")) {
+                String folder = trimmed.substring(1).trim();
+                currentFolder = folder.isEmpty() ? null : folder;
+                continue;
+            }
+
+            String key = (currentFolder == null ? "" : currentFolder) + "\u0000" + trimmed;
+            normalized.putIfAbsent(key, new SentenceDefinition(currentFolder, trimmed));
         }
 
         if (normalized.isEmpty()) {
             return List.of();
         }
 
-        List<GherkinSentence> toPersist = normalized.stream()
-                .map(content -> {
+        List<GherkinSentence> toPersist = normalized.values().stream()
+                .map(definition -> {
                     GherkinSentence entity = new GherkinSentence();
-                    entity.setContent(content);
+                    entity.setContent(definition.content());
+                    entity.setFolderPath(definition.folderPath());
                     return entity;
                 })
                 .collect(Collectors.toList());
@@ -75,6 +85,9 @@ public class GherkinSentenceService {
         GherkinSentenceDto dto = new GherkinSentenceDto();
         dto.setId(entity.getId());
         dto.setContent(entity.getContent());
+        dto.setFolderPath(entity.getFolderPath());
         return dto;
     }
+
+    private record SentenceDefinition(String folderPath, String content) {}
 }

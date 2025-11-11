@@ -39,12 +39,14 @@ class GherkinSentenceServiceTest {
         GherkinSentence sentence = new GherkinSentence();
         sentence.setId("id-1");
         sentence.setContent("Given a user");
+        sentence.setFolderPath("MSG");
         when(gherkinSentenceRepository.findAll()).thenReturn(List.of(sentence));
 
         List<GherkinSentenceDto> result = gherkinSentenceService.findAll();
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getContent()).isEqualTo("Given a user");
+        assertThat(result.get(0).getFolderPath()).isEqualTo("MSG");
         verify(gherkinSentenceRepository).findAll();
     }
 
@@ -58,15 +60,49 @@ class GherkinSentenceServiceTest {
             return payload;
         });
 
-        List<GherkinSentenceDto> result = gherkinSentenceService.replaceAll(
-                List.of("  Given a user  ", "Given a user", "#comment", "", "When something happens"));
+        List<GherkinSentenceDto> result = gherkinSentenceService.replaceAll(List.of(
+                "- MSG",
+                "  Given a user  ",
+                "Given a user",
+                "#comment",
+                "",
+                "When something happens"));
 
         assertThat(result)
                 .extracting(GherkinSentenceDto::getContent)
                 .containsExactly("Given a user", "When something happens");
+        assertThat(result)
+                .extracting(GherkinSentenceDto::getFolderPath)
+                .containsExactly("MSG", "MSG");
         verify(gherkinSentenceRepository).deleteAll();
         verify(gherkinSentenceRepository)
-                .saveAll(argThat(list -> list.size() == 2 && "Given a user".equals(list.get(0).getContent())));
+                .saveAll(argThat(list ->
+                        list.size() == 2
+                                && "Given a user".equals(list.get(0).getContent())
+                                && "MSG".equals(list.get(0).getFolderPath())
+                                && "MSG".equals(list.get(1).getFolderPath())));
+    }
+
+    @Test
+    void replaceAll_shouldHandleNestedFolders() {
+        when(gherkinSentenceRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        List<GherkinSentenceDto> result = gherkinSentenceService.replaceAll(List.of(
+                "- MSG",
+                "Given base",
+                "- MSG/SUB",
+                "Given nested",
+                "Given nested"));
+
+        assertThat(result)
+                .extracting(GherkinSentenceDto::getFolderPath)
+                .containsExactly("MSG", "MSG/SUB");
+        verify(gherkinSentenceRepository).deleteAll();
+        verify(gherkinSentenceRepository)
+                .saveAll(argThat(list ->
+                        list.size() == 2
+                                && "MSG".equals(list.get(0).getFolderPath())
+                                && "MSG/SUB".equals(list.get(1).getFolderPath())));
     }
 
     @Test

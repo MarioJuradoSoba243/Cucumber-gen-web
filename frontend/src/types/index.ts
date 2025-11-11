@@ -24,6 +24,7 @@ export interface TemplateDefinition {
 export interface GherkinSentence {
   id: string;
   content: string;
+  folderPath: string | null;
 }
 
 export interface GeneratedFeature {

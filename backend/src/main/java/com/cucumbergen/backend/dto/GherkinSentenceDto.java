@@ -12,6 +12,8 @@ public class GherkinSentenceDto {
     @NotBlank
     private String content;
 
+    private String folderPath;
+
     public String getId() {
         return id;
     }
@@ -26,5 +28,13 @@ public class GherkinSentenceDto {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getFolderPath() {
+        return folderPath;
+    }
+
+    public void setFolderPath(String folderPath) {
+        this.folderPath = folderPath;
     }
 }
