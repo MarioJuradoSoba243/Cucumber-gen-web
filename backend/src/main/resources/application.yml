@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:sqlite:./data/app.db
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    database-platform: com.cucumbergen.backend.persistence.SQLitePlatform
+    show-sql: false
+    properties:
+      eclipselink:
+        target-database: com.cucumbergen.backend.persistence.SQLitePlatform
+        weaving: false
+        logging.level: INFO
+      jakarta:
+        persistence:
+          schema-generation:
+            database.action: none
+  flyway:
+    locations: classpath:db/migration
+    enabled: true
+server:
+  port: 8080
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
