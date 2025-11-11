@@ -42,7 +42,7 @@
       <ul v-if="node.tests.length" class="space-y-1">
         <li
           v-for="test in node.tests"
-          :key="test.id ?? `${test.name}-${test.description}`"
+          :key="test.id ?? `${node.path}-${test.name}`"
           class="flex items-center justify-between"
           :style="{ paddingLeft: `${(level + 1) * 16 + 12}px` }"
         >
@@ -56,9 +56,6 @@
             @click="$emit('select-test', test)"
           >
             <p class="font-medium">{{ test.name }}</p>
-            <p v-if="test.description" class="text-xs" :class="isSelected(test) ? 'text-slate-200' : 'text-slate-500'">
-              {{ test.description }}
-            </p>
           </button>
           <button
             type="button"

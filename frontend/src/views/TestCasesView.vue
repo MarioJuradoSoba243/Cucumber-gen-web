@@ -62,40 +62,90 @@
           <div v-if="attributeStore.attributes.length === 0" class="text-sm text-slate-500">
             No hay atributos definidos. Agrega atributos desde la pestaña "Atributos".
           </div>
-          <div v-for="definition in attributeStore.attributes" :key="definition.id" class="space-y-1">
-            <label :for="`attribute-${definition.key}`" class="text-sm font-medium text-slate-700">
-              {{ definition.key }}
-              <span v-if="definition.required" class="text-red-500">*</span>
-            </label>
-            <select
-              v-if="definition.allowedValues.length > 0"
-              :id="`attribute-${definition.key}`"
-              v-model="formAttributes[definition.key]"
-              :required="definition.required"
-              class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none"
+          <template v-else>
+            <div v-if="activeAttributeDefinitions.length === 0" class="rounded border border-dashed border-slate-300 p-3 text-sm text-slate-500">
+              No hay atributos obligatorios. Añade los opcionales desde el selector inferior.
+            </div>
+            <div
+              v-for="definition in activeAttributeDefinitions"
+              :key="definition.id ?? definition.key"
+              class="space-y-2 rounded border border-slate-200 p-3"
             >
-              <option value="" disabled>Selecciona un valor</option>
-              <option v-for="option in definition.allowedValues" :key="option" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <input
-              v-else-if="definition.type === 'boolean'"
-              :id="`attribute-${definition.key}`"
-              type="checkbox"
-              :checked="formAttributes[definition.key] === 'true'"
-              @change="toggleBoolean(definition.key, $event)"
-              class="h-4 w-4 rounded border-slate-300 text-lime-600 focus:ring-lime-500"
-            />
-            <input
-              v-else
-              :id="`attribute-${definition.key}`"
-              v-model="formAttributes[definition.key]"
-              :required="definition.required"
-              type="text"
-              class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none"
-            />
-          </div>
+              <div class="flex items-center justify-between">
+                <label :for="`attribute-${definition.key}`" class="text-sm font-medium text-slate-700">
+                  {{ definition.key }}
+                  <span v-if="definition.required" class="text-red-500">*</span>
+                </label>
+                <button
+                  v-if="!definition.required"
+                  type="button"
+                  class="text-xs font-semibold text-slate-500 hover:text-red-600"
+                  @click="removeOptionalAttribute(definition.key)"
+                >
+                  Quitar
+                </button>
+              </div>
+              <select
+                v-if="definition.allowedValues.length > 0"
+                :id="`attribute-${definition.key}`"
+                v-model="formAttributes[definition.key]"
+                :required="definition.required"
+                class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none"
+              >
+                <option value="" disabled>Selecciona un valor</option>
+                <option v-for="option in definition.allowedValues" :key="option" :value="option">
+                  {{ option }}
+                </option>
+              </select>
+              <div v-else-if="definition.type === 'boolean'" class="flex items-center gap-2">
+                <input
+                  :id="`attribute-${definition.key}`"
+                  type="checkbox"
+                  :checked="formAttributes[definition.key] === 'true'"
+                  @change="toggleBoolean(definition.key, $event)"
+                  class="h-4 w-4 rounded border-slate-300 text-lime-600 focus:ring-lime-500"
+                />
+                <span class="text-xs text-slate-500">Marca la casilla para activar</span>
+              </div>
+              <input
+                v-else
+                :id="`attribute-${definition.key}`"
+                v-model="formAttributes[definition.key]"
+                :required="definition.required"
+                type="text"
+                class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none"
+              />
+            </div>
+            <div v-if="optionalAttributeOptions.length > 0" class="rounded border border-dashed border-slate-300 p-3">
+              <label class="text-sm font-medium text-slate-700" for="optional-attribute-select">
+                Añadir atributo opcional
+              </label>
+              <div class="mt-2 flex gap-2">
+                <select
+                  id="optional-attribute-select"
+                  v-model="nextOptionalAttribute"
+                  class="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none"
+                >
+                  <option value="">Selecciona un atributo</option>
+                  <option
+                    v-for="definition in optionalAttributeOptions"
+                    :key="definition.id ?? definition.key"
+                    :value="definition.key"
+                  >
+                    {{ definition.key }}
+                  </option>
+                </select>
+                <button
+                  type="button"
+                  class="rounded bg-lime-500 px-3 py-2 text-sm font-semibold text-white hover:bg-lime-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  :disabled="!nextOptionalAttribute"
+                  @click="addOptionalAttribute"
+                >
+                  Añadir
+                </button>
+              </div>
+            </div>
+          </template>
         </div>
 
         <div class="flex gap-3">
@@ -156,7 +206,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import TestFolderTree from '../components/TestFolderTree.vue';
 import { useTestStore } from '../stores/testStore';
 import { useAttributeStore } from '../stores/attributeStore';
-import type { TestCase } from '../types';
+import type { AttributeDefinition, TestCase } from '../types';
 import type { FolderNode } from '../types/testFolders';
 
 const testStore = useTestStore();
@@ -171,6 +221,8 @@ const emptyTest: TestCase = {
 
 const currentTest = reactive<TestCase>({ ...emptyTest });
 const formAttributes = reactive<Record<string, string>>({});
+const activeAttributeKeys = ref<string[]>([]);
+const nextOptionalAttribute = ref('');
 const feedback = ref('');
 const selectedFolder = ref('');
 const expandedFolders = ref<string[]>(['']);
@@ -262,13 +314,42 @@ const folderTree = computed<FolderNode>(() => {
   return root;
 });
 
-const payload = computed((): TestCase => ({
-  id: currentTest.id,
-  name: currentTest.name,
-  description: currentTest.description,
-  folderPath: currentTest.folderPath ?? '',
-  attributes: { ...formAttributes }
-}));
+const definitionMap = computed(() => {
+  const map = new Map<string, AttributeDefinition>();
+  for (const definition of attributeStore.attributes) {
+    map.set(definition.key, definition);
+  }
+  return map;
+});
+
+const activeAttributeDefinitions = computed(() =>
+  activeAttributeKeys.value
+    .map((key) => definitionMap.value.get(key))
+    .filter((definition): definition is AttributeDefinition => Boolean(definition))
+);
+
+const optionalAttributeOptions = computed(() =>
+  attributeStore.attributes.filter(
+    (definition) => !definition.required && !activeAttributeKeys.value.includes(definition.key)
+  )
+);
+
+const payload = computed((): TestCase => {
+  const attributes: Record<string, string> = {};
+  for (const key of activeAttributeKeys.value) {
+    const value = formAttributes[key];
+    if (value !== undefined) {
+      attributes[key] = value;
+    }
+  }
+  return {
+    id: currentTest.id,
+    name: currentTest.name,
+    description: currentTest.description,
+    folderPath: currentTest.folderPath ?? '',
+    attributes
+  };
+});
 
 onMounted(async () => {
   await Promise.all([testStore.loadTests(), attributeStore.loadAttributes()]);
@@ -278,14 +359,56 @@ onMounted(async () => {
 watch(
   () => attributeStore.attributes,
   (definitions) => {
-    for (const definition of definitions) {
-      if (!(definition.key in formAttributes)) {
-        formAttributes[definition.key] = '';
-      }
-    }
+    const allowedKeys = new Set(definitions.map((definition) => definition.key));
+    const requiredKeys = definitions.filter((definition) => definition.required).map((definition) => definition.key);
+    const preservedActive = activeAttributeKeys.value.filter((key) => allowedKeys.has(key));
+    setActiveAttributeKeys([...requiredKeys, ...preservedActive]);
   },
   { deep: true }
 );
+
+watch(optionalAttributeOptions, () => {
+  updateNextOptionalAttribute();
+});
+
+function setActiveAttributeKeys(keys: string[]) {
+  const uniqueKeys: string[] = [];
+  const seen = new Set<string>();
+  for (const key of keys) {
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueKeys.push(key);
+    }
+  }
+  activeAttributeKeys.value = uniqueKeys;
+  syncFormAttributes();
+  updateNextOptionalAttribute();
+}
+
+function syncFormAttributes() {
+  const activeSet = new Set(activeAttributeKeys.value);
+  for (const key of Object.keys(formAttributes)) {
+    if (!activeSet.has(key)) {
+      delete formAttributes[key];
+    }
+  }
+  for (const key of activeAttributeKeys.value) {
+    if (!(key in formAttributes)) {
+      formAttributes[key] = '';
+    }
+  }
+}
+
+function updateNextOptionalAttribute() {
+  const options = optionalAttributeOptions.value;
+  if (options.length === 0) {
+    nextOptionalAttribute.value = '';
+    return;
+  }
+  if (!options.some((option) => option.key === nextOptionalAttribute.value)) {
+    nextOptionalAttribute.value = options[0].key;
+  }
+}
 
 function expandToPath(path: string) {
   const set = new Set(expandedFolders.value);
@@ -305,8 +428,12 @@ function prepareNewTest() {
   const normalizedFolder = safeNormalize(selectedFolder.value) ?? '';
   Object.assign(currentTest, { ...emptyTest, attributes: {}, folderPath: normalizedFolder, id: undefined });
   Object.keys(formAttributes).forEach((key) => delete formAttributes[key]);
-  for (const definition of attributeStore.attributes) {
-    formAttributes[definition.key] = '';
+  const requiredKeys = attributeStore.attributes
+    .filter((definition) => definition.required)
+    .map((definition) => definition.key);
+  setActiveAttributeKeys(requiredKeys);
+  for (const key of activeAttributeKeys.value) {
+    formAttributes[key] = '';
   }
   selectedTestId.value = undefined;
   feedback.value = '';
@@ -317,9 +444,21 @@ function editTest(test: TestCase) {
   Object.assign(currentTest, JSON.parse(JSON.stringify(test)));
   currentTest.folderPath = normalizedFolder;
   Object.keys(formAttributes).forEach((key) => delete formAttributes[key]);
-  for (const definition of attributeStore.attributes) {
-    const value = test.attributes?.[definition.key];
-    formAttributes[definition.key] = value === undefined || value === null ? '' : String(value);
+  const attributesFromTest = test.attributes ?? {};
+  const keysFromTest = Object.keys(attributesFromTest).filter((key) => definitionMap.value.has(key));
+  const requiredKeys = attributeStore.attributes
+    .filter((definition) => definition.required)
+    .map((definition) => definition.key);
+  setActiveAttributeKeys([...requiredKeys, ...keysFromTest]);
+  for (const key of activeAttributeKeys.value) {
+    const rawValue = attributesFromTest[key];
+    if (rawValue === undefined || rawValue === null) {
+      formAttributes[key] = '';
+    } else if (typeof rawValue === 'boolean') {
+      formAttributes[key] = rawValue ? 'true' : 'false';
+    } else {
+      formAttributes[key] = String(rawValue);
+    }
   }
   selectedFolder.value = normalizedFolder;
   selectedTestId.value = test.id;
@@ -382,6 +521,30 @@ async function removeTest(test: TestCase) {
 function toggleBoolean(key: string, event: Event) {
   const target = event.target as HTMLInputElement;
   formAttributes[key] = target.checked ? 'true' : 'false';
+}
+
+function addOptionalAttribute() {
+  if (!nextOptionalAttribute.value) {
+    return;
+  }
+  const key = nextOptionalAttribute.value;
+  if (!definitionMap.value.has(key)) {
+    return;
+  }
+  setActiveAttributeKeys([...activeAttributeKeys.value, key]);
+  if (!(key in formAttributes)) {
+    formAttributes[key] = '';
+  }
+}
+
+function removeOptionalAttribute(key: string) {
+  const definition = definitionMap.value.get(key);
+  if (!definition || definition.required) {
+    return;
+  }
+  const remainingKeys = activeAttributeKeys.value.filter((item) => item !== key);
+  setActiveAttributeKeys(remainingKeys);
+  delete formAttributes[key];
 }
 
 function selectFolder(path: string) {
