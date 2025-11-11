@@ -7,8 +7,10 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 /**
  * Tests for {@link WebConfig}.
@@ -29,6 +31,7 @@ class WebConfigTest {
         assertTrue(configuration.getAllowedMethods().containsAll(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")));
         assertEquals(List.of("*"), configuration.getAllowedHeaders());
         assertTrue(Boolean.TRUE.equals(configuration.getAllowCredentials()));
+        assertEquals(3600L, configuration.getMaxAge());
     }
 
     @Test
@@ -46,6 +49,7 @@ class WebConfigTest {
         assertTrue(configuration.getAllowedMethods().containsAll(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")));
         assertEquals(List.of("*"), configuration.getAllowedHeaders());
         assertTrue(Boolean.TRUE.equals(configuration.getAllowCredentials()));
+        assertEquals(3600L, configuration.getMaxAge());
     }
 
     @Test
@@ -61,5 +65,17 @@ class WebConfigTest {
 
         assertEquals(List.of("http://*.example.com", "https://*.example.org"), configuration.getAllowedOriginPatterns());
         assertTrue(configuration.getAllowedOrigins() == null || configuration.getAllowedOrigins().isEmpty());
+    }
+
+    @Test
+    void corsFilter_isRegisteredWithHighPrecedence() {
+        MockEnvironment environment = new MockEnvironment();
+
+        WebConfig config = new WebConfig(environment);
+        CorsConfigurationSource source = config.corsConfigurationSource();
+        FilterRegistrationBean<CorsFilter> registration = config.corsFilter(source);
+
+        assertEquals(-102, registration.getOrder());
+        assertTrue(registration.getFilter() instanceof CorsFilter);
     }
 }
